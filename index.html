@@ -1,71 +1,84 @@
 <!DOCTYPE html>
 <html lang="ru">
-<head>
-  <meta charset="UTF-8">
-  <title>ThinkFirst</title>
-</head>
-<body>
-  <button onclick="setLanguage('ru')">RU</button>
-  <button onclick="setLanguage('en')">EN</button>
 
-  <h1>ThinkFirst</h1>
-  <p data-i18n="tagline"></p>
+<head>
+    <meta charset="UTF-8">
+    <title>ThinkFirst</title>
+</head>
+
+<body>
+    <button onclick="setLanguage('ru')">RU</button>
+    <button onclick="setLanguage('en')">EN</button>
+
+    <h1>ThinkFirst</h1>
+    <p data-i18n="tagline"></p>
 
     <h2 data-i18n="subject"></h2>
-  <textarea rows="3" cols="50" ></textarea>
-  
-  <h2 data-i18n="task"></h2>
-  <textarea rows="3" cols="50"></textarea>
+    <textarea rows="3" cols="50"></textarea>
 
-  
-  <h2 data-i18n="attempt"></h2>
- <textarea id="attemptInput" rows="6" cols="50"></textarea>
- <p><span id="counter">0</span> / 100</p>
- <br> 
- <button id="hintBtn" data-i18n="hint" disabled></button>
-   
+    <h2 data-i18n="task"></h2>
+    <textarea rows="3" cols="50"></textarea>
 
 
- <script>
-    const translations = {
-      ru: {
-        tagline: "Сначала подумай сам. Потом получишь подсказку.",
-        task: "Задача",
-        attempt: "Моя попытка",
-        hint: "Попросить подсказку",
-        subject: "Предмет",
-    },
-      en: {
-        tagline: "Think first. Then get a hint.",
-        task: "Task",
-        attempt: "My attempt",
-        hint: "Ask for a hint",
-        subject: "Subject",
+    <h2 data-i18n="attempt"></h2>
+    <textarea id="attemptInput" rows="6" cols="50"></textarea>
+    <p><span id="counter">0</span> / 100</p>
+    <br>
+    <button id="hintBtn" data-i18n="hint" disabled></button>
+    <p id="hintOutput"></p>
 
-      }
-    };
 
-    function setLanguage(lang) {
-      document.documentElement.lang = lang;
-      const elements = document.querySelectorAll("[data-i18n]");
-      elements.forEach(function (el) {
-        el.textContent = translations[lang][el.dataset.i18n];
-      });
-    }
+    <script>
+        const translations = {
+            ru: {
+                tagline: "Сначала подумай сам. Потом получишь подсказку.",
+                task: "Задача",
+                attempt: "Моя попытка",
+                hint: "Попросить подсказку",
+                subject: "Предмет",
+            },
+            en: {
+                tagline: "Think first. Then get a hint.",
+                task: "Task",
+                attempt: "My attempt",
+                hint: "Ask for a hint",
+                subject: "Subject",
 
-    setLanguage("ru");
-      const attemptInput = document.getElementById("attemptInput");
-    const hintBtn = document.getElementById("hintBtn");
+            }
+        };
+
+        function setLanguage(lang) {
+            document.documentElement.lang = lang;
+            const elements = document.querySelectorAll("[data-i18n]");
+            elements.forEach(function (el) {
+                el.textContent = translations[lang][el.dataset.i18n];
+            });
+        }
+
+        setLanguage("ru");
+        const attemptInput = document.getElementById("attemptInput");
+        const hintBtn = document.getElementById("hintBtn");
         const counter = document.getElementById("counter");
-    const MIN_LENGTH = 100;
+        const MIN_LENGTH = 100;
+        const MIN_UNIQUE_WORDS = 10;
 
         function checkAttempt() {
-      const length = attemptInput.value.length;
-      counter.textContent = length;
-      hintBtn.disabled = length < MIN_LENGTH;
-    }
+            const text = attemptInput.value.trim();
+            const length = text.length;
+            const words = text.toLowerCase().split(/\s+/);
+            const uniqueWords = new Set(words).size;
 
-    attemptInput.addEventListener("input", checkAttempt);
-  </script>
+            counter.textContent = length;
+            hintBtn.disabled = length < MIN_LENGTH || uniqueWords < MIN_UNIQUE_WORDS;
+        }
+
+        attemptInput.addEventListener("input", checkAttempt);
+        const hintOutput = document.getElementById("hintOutput");
+
+        hintBtn.addEventListener("click", function () {
+            hintOutput.textContent = "Great, you tried first! A hint will appear here soon.";
+        });
+    </script>
 </body>
+
 </html>
