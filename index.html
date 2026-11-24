@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>ThinkFirst</title>
+</head>
+<body>
+  <button onclick="setLanguage('ru')">RU</button>
+  <button onclick="setLanguage('en')">EN</button>
+
+  <h1>ThinkFirst</h1>
+  <p data-i18n="tagline"></p>
+
+    <h2 data-i18n="subject"></h2>
+  <textarea rows="3" cols="50" ></textarea>
+  
+  <h2 data-i18n="task"></h2>
+  <textarea rows="3" cols="50"></textarea>
+
+  
+  <h2 data-i18n="attempt"></h2>
+ <textarea id="attemptInput" rows="6" cols="50"></textarea>
+ <p><span id="counter">0</span> / 100</p>
+ <br> 
+ <button id="hintBtn" data-i18n="hint" disabled></button>
+   
+
+
+ <script>
+    const translations = {
+      ru: {
+        tagline: "Сначала подумай сам. Потом получишь подсказку.",
+        task: "Задача",
+        attempt: "Моя попытка",
+        hint: "Попросить подсказку",
+        subject: "Предмет",
+    },
+      en: {
+        tagline: "Think first. Then get a hint.",
+        task: "Task",
+        attempt: "My attempt",
+        hint: "Ask for a hint",
+        subject: "Subject",
+
+      }
+    };
+
+    function setLanguage(lang) {
+      document.documentElement.lang = lang;
+      const elements = document.querySelectorAll("[data-i18n]");
+      elements.forEach(function (el) {
+        el.textContent = translations[lang][el.dataset.i18n];
+      });
+    }
+
+    setLanguage("ru");
+      const attemptInput = document.getElementById("attemptInput");
+    const hintBtn = document.getElementById("hintBtn");
+        const counter = document.getElementById("counter");
+    const MIN_LENGTH = 100;
+
+        function checkAttempt() {
+      const length = attemptInput.value.length;
+      counter.textContent = length;
+      hintBtn.disabled = length < MIN_LENGTH;
+    }
+
+    attemptInput.addEventListener("input", checkAttempt);
+  </script>
+</body>
+</html>
