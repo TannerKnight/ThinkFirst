@@ -3,69 +3,163 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>ThinkFirst</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #2f5fd7;
+            color: #222;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        }
+
+        h1 {
+            margin-top: 0;
+        }
+
+        h2 {
+            font-size: 18px;
+            margin-bottom: 6px;
+        }
+
+        textarea {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 8px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+        }
+
+        button {
+            padding: 8px 14px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            background: #4f6ef7;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:disabled {
+            background: #c5cbe0;
+            cursor: not-allowed;
+        }
+
+        .lang button {
+            background: #e3e7f5;
+            color: #222;
+            padding: 4px 10px;
+            font-size: 14px;
+        }
+
+        #hintOutput {
+            margin-top: 16px;
+            padding: 12px;
+            background: #eef9ee;
+            border-radius: 8px;
+            display: none;
+        }
+    </style>
 </head>
 
 <body>
-    <button onclick="setLanguage('ru')">RU</button>
-    <button onclick="setLanguage('en')">EN</button>
+    <div class="container">
+        <div class="lang">
+            <button onclick="setLanguage('ru')">RU</button>
+            <button onclick="setLanguage('en')">EN</button>
+        </div>
 
-    <h1>ThinkFirst</h1>
-    <p data-i18n="tagline"></p>
+        <h1>ThinkFirst</h1>
+        <p data-i18n="tagline"></p>
 
-    <h2 data-i18n="subject"></h2>
-    <textarea rows="3" cols="50"></textarea>
+        <h2 data-i18n="subject"></h2>
+        <textarea id="subjectInput" rows="2" data-i18n-placeholder="subjectPlaceholder"></textarea>
 
-    <h2 data-i18n="task"></h2>
-    <textarea rows="3" cols="50"></textarea>
+        <h2 data-i18n="task"></h2>
+        <textarea id="taskInput" rows="3" data-i18n-placeholder="taskPlaceholder"></textarea>
 
+        <h2 data-i18n="attempt"></h2>
+        <textarea id="attemptInput" rows="6" data-i18n-placeholder="attemptPlaceholder"></textarea>
+        <p><span id="counter">0</span> / <span id="minLength"></span></p>
 
-    <h2 data-i18n="attempt"></h2>
-    <textarea id="attemptInput" rows="6" cols="50"></textarea>
-    <p><span id="counter">0</span> / 100</p>
-    <br>
-    <button id="hintBtn" data-i18n="hint" disabled></button>
-    <p id="hintOutput"></p>
-
+        <button id="hintBtn" data-i18n="hint" disabled></button>
+        <p id="hintOutput"></p>
+    </div>
 
     <script>
         const translations = {
             ru: {
                 tagline: "Сначала подумай сам. Потом получишь подсказку.",
+                subject: "Предмет",
                 task: "Задача",
                 attempt: "Моя попытка",
                 hint: "Попросить подсказку",
-                subject: "Предмет",
+                subjectPlaceholder: "Например: математика",
+                taskPlaceholder: "Вставь сюда условие задачи",
+                attemptPlaceholder: "Напиши, как ты пытался решить задачу...",
+                hintReady: "Отлично, ты попробовал сам! Здесь скоро появится подсказка."
             },
             en: {
                 tagline: "Think first. Then get a hint.",
+                subject: "Subject",
                 task: "Task",
                 attempt: "My attempt",
                 hint: "Ask for a hint",
-                subject: "Subject",
-
+                subjectPlaceholder: "For example: math",
+                taskPlaceholder: "Paste the task here",
+                attemptPlaceholder: "Write how you tried to solve the task...",
+                hintReady: "Great, you tried first! A hint will appear here soon."
             }
         };
 
-        function setLanguage(lang) {
-            document.documentElement.lang = lang;
-            const elements = document.querySelectorAll("[data-i18n]");
-            elements.forEach(function (el) {
-                el.textContent = translations[lang][el.dataset.i18n];
-            });
-        }
+        const MIN_LENGTH = 100;
+        const MIN_UNIQUE_WORDS = 10;
 
-        setLanguage("ru");
         const attemptInput = document.getElementById("attemptInput");
         const hintBtn = document.getElementById("hintBtn");
         const counter = document.getElementById("counter");
-        const MIN_LENGTH = 100;
-        const MIN_UNIQUE_WORDS = 10;
+        const hintOutput = document.getElementById("hintOutput");
+        document.getElementById("minLength").textContent = MIN_LENGTH;
+
+        let currentLang = "ru";
+        let hintShown = false;
+
+        function setLanguage(lang) {
+            currentLang = lang;
+            document.documentElement.lang = lang;
+
+            document.querySelectorAll("[data-i18n]").forEach(function (el) {
+                el.textContent = translations[lang][el.dataset.i18n];
+            });
+
+            document.querySelectorAll("[data-i18n-placeholder]").forEach(function (el) {
+                el.placeholder = translations[lang][el.dataset.i18nPlaceholder];
+            });
+
+            if (hintShown) {
+                hintOutput.textContent = translations[lang].hintReady;
+            }
+        }
 
         function checkAttempt() {
             const text = attemptInput.value.trim();
             const length = text.length;
-            const words = text.toLowerCase().split(/\s+/);
+
+            const cleaned = text.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, "");
+            const words = cleaned.split(/\s+/).filter(function (w) {
+                return w.length > 0;
+            });
             const uniqueWords = new Set(words).size;
 
             counter.textContent = length;
@@ -73,11 +167,14 @@
         }
 
         attemptInput.addEventListener("input", checkAttempt);
-        const hintOutput = document.getElementById("hintOutput");
 
         hintBtn.addEventListener("click", function () {
-            hintOutput.textContent = "Great, you tried first! A hint will appear here soon.";
+            hintShown = true;
+            hintOutput.style.display = "block";
+            hintOutput.textContent = translations[currentLang].hintReady;
         });
+
+        setLanguage("ru");
     </script>
 </body>
 
